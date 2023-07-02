@@ -118,7 +118,17 @@ export default class TodoListView extends ItemView {
 
   private groupItems() {
     const flattenedItems = Array.from(this.itemsByFile.values()).flat()
-    const searchedItems = flattenedItems.filter((e) => e.originalText.toLowerCase().includes(this.searchTerm.toLowerCase()))
+
+    // Search for words inside of input instead of whole literal
+    const searchTerms = this.splitSearchTerm(this.searchTerm.toLowerCase());
+    let searchedItems = flattenedItems;
+    
+    for (const term of searchTerms) {
+    searchedItems = searchedItems.filter((e) =>
+    e.originalText.toLowerCase().includes(term)
+    );
+    }
+    
     this.groupedItems = groupTodos(
       searchedItems,
       this.plugin.getSettingValue("groupBy"),
@@ -127,6 +137,21 @@ export default class TodoListView extends ItemView {
       this.plugin.getSettingValue("subGroups"),
       this.plugin.getSettingValue("sortDirectionSubGroups")
     )
+  }
+
+  // Makes "" literal search possible by effectively ignoring spaces inside of quotation marks
+  private splitSearchTerm(searchTerm) {
+    const regex = /(["'])(.*?)\1/g;
+    const quotedPhrases = searchTerm.match(regex) || [];
+    const sanitizedSearchTerm = searchTerm.replace(regex, "").trim();
+    const words = sanitizedSearchTerm.split(" ").filter((word) => word !== "");
+    
+    for (const phrase of quotedPhrases) {
+    const phraseWithoutQuotes = phrase.slice(1, -1);
+    words.push(phraseWithoutQuotes);
+    }
+    
+    return words;
   }
 
   private renderView() {
