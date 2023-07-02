@@ -119,14 +119,14 @@ export default class TodoListView extends ItemView {
   private groupItems() {
     const flattenedItems = Array.from(this.itemsByFile.values()).flat()
 
-    // Search for words inside of input instead of whole literal
+    // Split search term with function
     const searchTerms = this.splitSearchTerm(this.searchTerm.toLowerCase());
+
+    // Filter the results one keyword after another
     let searchedItems = flattenedItems;
-    
     for (const term of searchTerms) {
-    searchedItems = searchedItems.filter((e) =>
-    e.originalText.toLowerCase().includes(term)
-    );
+      searchedItems = searchedItems.filter((e) =>
+      e.originalText.toLowerCase().includes(term));
     }
     
     this.groupedItems = groupTodos(
@@ -139,18 +139,21 @@ export default class TodoListView extends ItemView {
     )
   }
 
-  // Makes "" literal search possible by effectively ignoring spaces inside of quotation marks
+  // Makes "" literal search possible by extracting literals and handing them separately
   private splitSearchTerm(searchTerm) {
+    // Regex filter for phrases inside of '' and ""
     const regex = /(["'])(.*?)\1/g;
+    // Find phrases and extract
     const quotedPhrases = searchTerm.match(regex) || [];
+    // Remove literals for easy split by space
     const sanitizedSearchTerm = searchTerm.replace(regex, "").trim();
+    // Split by space
     const words = sanitizedSearchTerm.split(" ").filter((word) => word !== "");
-    
+    // Remove "" and '' and then add the phrases to the word collection
     for (const phrase of quotedPhrases) {
-    const phraseWithoutQuotes = phrase.slice(1, -1);
-    words.push(phraseWithoutQuotes);
+      const phraseWithoutQuotes = phrase.slice(1, -1);
+      words.push(phraseWithoutQuotes);
     }
-    
     return words;
   }
 
